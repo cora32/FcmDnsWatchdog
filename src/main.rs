@@ -41,11 +41,23 @@ fn foo(dns_server: &str, address: &str) -> std::io::Result<()> {
     }
     buf_send.extend(footer.iter());
 
-    stream.send_to(&buf_send, addr).expect(&format!("Cannot send dns-request to {:?}", &addr).to_owned());
-    
-    let mut buf = [0; 128];
+    stream.set_write_timeout(Some(Duration::from_secs(3))).expect("set_write_timeout call failed");
     stream.set_read_timeout(Some(Duration::from_secs(3))).expect("set_read_timeout call failed");
-    // stream.recv_from(&mut buf).expect(&format!("Cannot receive dns-request from {:?}", &addr).to_owned());
+
+    let result = stream.send_to(&buf_send, addr);
+    match result {
+        Ok(_) => {
+            recv(&stream, &addr)
+        },
+        Err(e) => {
+            print!("Cannot send dns-request from {:?} {:?}", &addr, &e);
+            return Err(Error::new(ErrorKind::Other, "Timeout on send_to"))
+        }
+    }
+}
+
+fn recv(stream: &UdpSocket, addr: &SocketAddr) -> std::io::Result<()> {
+    let mut buf = [0; 128];
     let result = stream.recv_from(&mut buf);
     match result {
         Ok(_) => {
@@ -119,7 +131,7 @@ fn foo(dns_server: &str, address: &str) -> std::io::Result<()> {
                                                 &buf[boundary + 20]);
         },
         Err(e) => {
-            print!("Cannot receive dns-request from {:?} {:?}", &addr, &e);
+            print!("Cannot receive dns-response from {:?} {:?}", addr, &e);
             return Err(Error::new(ErrorKind::Other, "Timeout on recv"))
         }
     }
@@ -163,7 +175,7 @@ fn send_push() {
 
     let body = "{ \
                     \"to\":\"token\", \
-                    \"priority\":\"hikgh\", \
+                    \"priority\":\"high\", \
                     \"notification\": { \
                         \"title\":\"Dns failure!\", \
                         \"body\":\"Restart of Dnsmasq is required.\", \
