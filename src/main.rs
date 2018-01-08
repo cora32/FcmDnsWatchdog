@@ -22,7 +22,7 @@ impl<T: fmt::Debug> fmt::Debug for Array<T> {
     }
 }
 
-fn foo(dns_server: &str, address: &str) -> std::io::Result<()> {
+fn job(dns_server: &str, address: &str) -> std::io::Result<()> {
     let ip = dns_server;
     let addr: SocketAddr = ip.parse().unwrap();
     let stream = UdpSocket::bind("0.0.0.0:0").expect("Cannot bind on local port.");
@@ -162,7 +162,10 @@ fn check_bit_str(value: &u8, bit_position: u8) -> String {
 
 fn send_push() {
     let sock = "216.58.211.138:80".parse().unwrap();
-    let mut stream = TcpStream::connect_timeout(&sock, Duration::from_secs(3)).unwrap();
+    let mut stream = TcpStream::connect_timeout(&sock, Duration::from_secs(3));
+    match stream {
+        Ok(ref mut r) => {
+
     // let mut stream = TcpStream::connect("216.58.211.138:443").unwrap();
     // let mut ctx = SslContextBuilder::new(SslMethod::tls()).unwrap();
     // ctx.set_default_verify_paths().unwrap();
@@ -173,7 +176,7 @@ fn send_push() {
 
     // let mut ssl_stream = ssl.connect(stream).unwrap();
 
-    let body = "{ \
+            let body = "{ \
                     \"to\":\"token\", \
                     \"priority\":\"high\", \
                     \"notification\": { \
@@ -190,10 +193,10 @@ fn send_push() {
                         Content-Length: {}\r\n\r\n\
                         {}", &length, &body);
 
-            let _ = stream.write(&data.as_bytes());
+            let _ = r.write(&data.as_bytes());
 
             let mut buf = [0; 256];
-            let result = stream.read(&mut buf);
+            let result = r.read(&mut buf);
             match result {
                 Ok(r) => {
                     println!("Sent {} {}", r, String::from_utf8_lossy(&buf));
@@ -202,6 +205,11 @@ fn send_push() {
                     println!("Error {}", e);
                 }
             }
+        },
+        Err(e) => {
+            println!("FCM Error {}", e);
+        }
+    }    
 }
 
 fn main() {
@@ -211,7 +219,7 @@ fn main() {
     let sleep_millis = time::Duration::from_millis(delay);
     
     loop {
-        let result = foo(&dns_server, &address);
+        let result = job(&dns_server, &address);
         match result {
             Ok(_) => println!("\nOK"),
             Err(e) => {
