@@ -217,16 +217,29 @@ fn main() {
     let address = env::args().nth(2).expect("No test address specified.");
     let delay: u64 = env::args().nth(3).expect("No delay specified.").parse().unwrap();
     let sleep_millis = time::Duration::from_millis(delay);
-    
+    let temp_sleep_millis = time::Duration::from_millis(2000);
+    let retry_count = 3;
+    let mut count = 0;
+
     loop {
         let result = job(&dns_server, &address);
         match result {
-            Ok(_) => println!("\nOK"),
+            Ok(_) => {
+                count = 0;
+                println!("\n+ OK\n");
+                thread::sleep(sleep_millis);
+            },
             Err(e) => {
-                println!("Sending push... {}", e);
-                send_push()
+                if count == retry_count {
+                    println!("--> DNS failed after {} retries. Sending push... {}", retry_count, e);
+                    send_push();
+                    thread::sleep(sleep_millis);
+                } else {
+                    println!("--> Failed, retrying... {} {}", count, e);
+                    count += 1;
+                    thread::sleep(temp_sleep_millis);
+                }
             }
         }
-        thread::sleep(sleep_millis);
     }
 }
