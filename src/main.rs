@@ -206,7 +206,7 @@ fn send_push() {
             // let mut ssl_stream = ssl.connect(stream).unwrap();
 
             let body = "{ \
-                        \"to\":\"cwTQNj6Rs_M:APA91bE86yhwP9j6lZRxvqcAwWuXg3A7UI4NswmU1P3feG_875dQm_uXYujvk9CvJe3rWJ3-8Lzti_2u88EgRBQMeDN2Ci3bWJnfRwWWCYLB52W2u_w7pZI-vNlisE2EhalSu-U6ffg3\", \
+                        \"to\":\"your_device_token\", \
                         \"priority\":\"high\", \
                         \"notification\": { \
                         \"title\":\"Dns failure!\", \
@@ -218,7 +218,7 @@ fn send_push() {
             let data = format!(
                 "POST /fcm/send HTTP/1.1\r\n\
                  Host: fcm.googleapis.com\r\n\
-                 Authorization: key=AAAAnmTmaJE:APA91bG2PSiHCgyzz_PJZivYnAqwOvR_KetlqpyAezIjpDy6zcmCwmm04J5FsOpAYnK4a_DzFltFmu9ssxGaHilDOjopOAixO4tV0l4Zi6b5ZbnjRua7KbtzPdJqLEySWz_POPILBWCg\r\n\
+                 Authorization: key=your_fcm_key\r\n\
                  Content-Type: application/json\r\n\
                  Content-Length: {}\r\n\r\n\
                  {}",
